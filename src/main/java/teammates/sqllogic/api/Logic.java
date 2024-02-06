@@ -863,21 +863,21 @@ public class Logic {
     /**
      * Gets a team by associated {@code courseId} and {@code sectionName}.
      */
-    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException {
         return coursesLogic.getSectionOrCreate(courseId, sectionName);
     }
 
     /**
-     * Gets a team by associated {@code courseId} and {@code sectionName}.
+     * Gets a team by associated {@code section}.
      */
-    public Section getSectionOrCreate(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException {
         return coursesLogic.getSectionOrCreate(section);
     }
 
     /**
      * Gets a team by associated {@code section} and {@code teamName}.
      */
-    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException {
         return coursesLogic.getTeamOrCreate(section, teamName);
     }
 

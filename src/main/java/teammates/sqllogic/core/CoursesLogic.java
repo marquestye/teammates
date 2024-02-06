@@ -197,7 +197,7 @@ public final class CoursesLogic {
     /**
      * Gets a team by associated {@code courseId} and {@code sectionName}.
      */
-    public Section getSectionOrCreate(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException {
         return coursesDb.getSectionOrCreate(section);
     }
 
@@ -254,14 +254,14 @@ public final class CoursesLogic {
      /**
      * Gets the section with the name in a particular course, otherwise creates a new section.
      */
-    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException {
         return coursesDb.getSectionOrCreate(courseId, sectionName);
     }
 
     /**
      * Gets the team with the name in a particular session, otherwise creates a new team.
      */
-    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException {
         return coursesDb.getTeamOrCreate(section, teamName);
     }
 

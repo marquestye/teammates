@@ -239,7 +239,7 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Gets a team by its {@code section} and {@code teamName}.
      */
-    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException, EntityAlreadyExistsException{
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException {
         assert teamName != null;
         assert section != null;
         
@@ -248,7 +248,12 @@ public final class CoursesDb extends EntitiesDb {
 
         if (team == null) {
             team = new Team(section, teamName);
-            createTeam(team);
+
+            if (!team.isValid()) {
+                throw new InvalidParametersException(team.getInvalidityInfo());
+            }
+
+            persist(team);
         }
 
         return team;
@@ -296,7 +301,7 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Gets a section by its {@code courseId} and {@code sectionName}.
      */
-    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException {
         assert courseId != null;
         assert sectionName != null;
 
@@ -305,7 +310,12 @@ public final class CoursesDb extends EntitiesDb {
         if (section == null) {
             Course course = CoursesDb.inst().getCourse(courseId);
             section = new Section(course, sectionName);
-            createSection(section);
+            
+            if (!section.isValid()) {
+                throw new InvalidParametersException(section.getInvalidityInfo());
+            }
+
+            persist(section);
         }
 
         return section;
@@ -314,7 +324,7 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Gets a section by its {@code courseId} and {@code sectionName}.
      */
-    public Section getSectionOrCreate(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException {
         assert section != null;
 
         String courseId = section.getCourse().getId();
@@ -325,7 +335,12 @@ public final class CoursesDb extends EntitiesDb {
         if (section == null) {
             Course course = CoursesDb.inst().getCourse(courseId);
             section = new Section(course, sectionName);
-            createSection(section);
+
+            if (!section.isValid()) {
+                throw new InvalidParametersException(section.getInvalidityInfo());
+            }
+
+            persist(section);
         }
 
         return section;
