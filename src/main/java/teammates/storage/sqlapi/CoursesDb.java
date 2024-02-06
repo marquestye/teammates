@@ -20,7 +20,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-import jakarta.transaction.Transactional;
 
 /**
  * Handles CRUD operations for courses.
@@ -95,7 +94,6 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Creates a section.
      */
-    @Transactional
     public Section createSection(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
         assert section != null;
 
@@ -218,6 +216,44 @@ public final class CoursesDb extends EntitiesDb {
         return team;
     }
 
+        /**
+     * Gets a team by its {@code section} and {@code teamName}.
+     */
+    public Team getTeam(Section section, String teamName) {
+        assert teamName != null;
+        assert section != null;
+
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaQuery<Team> cr = cb.createQuery(Team.class);
+        Root<Team> teamRoot = cr.from(Team.class);
+        Join<Team, Section> sectionJoin = teamRoot.join("section");
+
+        cr.select(teamRoot)
+                .where(cb.and(
+                    cb.equal(sectionJoin.get("name"), section.getName()),
+                    cb.equal(teamRoot.get("name"), teamName)));
+
+        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a team by its {@code section} and {@code teamName}.
+     */
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException, EntityAlreadyExistsException{
+        assert teamName != null;
+        assert section != null;
+        
+        section = getSectionOrCreate(section);
+        Team team = getTeam(section, teamName);
+
+        if (team == null) {
+            team = new Team(section, teamName);
+            createTeam(team);
+        }
+
+        return team;
+    }
+
     /**
      * Gets a team by name.
      */
@@ -260,16 +296,36 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Gets a section by its {@code courseId} and {@code sectionName}.
      */
-    public Section getSectionOrCreate(String courseId, String sectionName) {
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException, EntityAlreadyExistsException {
         assert courseId != null;
         assert sectionName != null;
 
         Section section = getSection(courseId, sectionName);
 
         if (section == null) {
-            Course course = getCourse(courseId);
+            Course course = CoursesDb.inst().getCourse(courseId);
             section = new Section(course, sectionName);
-            persist(section);
+            createSection(section);
+        }
+
+        return section;
+    }
+
+    /**
+     * Gets a section by its {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
+        assert section != null;
+
+        String courseId = section.getCourse().getId();
+        String sectionName = section.getName();
+
+        section = getSection(courseId, sectionName);
+
+        if (section == null) {
+            Course course = CoursesDb.inst().getCourse(courseId);
+            section = new Section(course, sectionName);
+            createSection(section);
         }
 
         return section;
