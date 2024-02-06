@@ -217,10 +217,11 @@ public class UpdateStudentActionIT extends BaseActionIT<UpdateStudentAction> {
         Course course = typicalBundle.courses.get("course1");
         String courseId = instructor1OfCourse1.getCourseId();
         String sectionInMaxCapacity = "sectionInMaxCapacity";
-        Team team = new Team(new Section(course, sectionInMaxCapacity), "randomTeamName");
+        Section section = logic.getSectionOrCreate(courseId, sectionInMaxCapacity);
+        Team team = logic.getTeamOrCreate(section, "randomTeamName");
 
         Student studentToJoinMaxSection = new Student(course, "studentToJoinMaxSection",
-                "studentToJoinMaxSection@test.com", "cmt");
+                "studentToJoinMaxSection@test.com", "cmt", team);
 
         logic.createStudent(studentToJoinMaxSection);
 
@@ -234,7 +235,7 @@ public class UpdateStudentActionIT extends BaseActionIT<UpdateStudentAction> {
 
         assertEquals(Const.SECTION_SIZE_LIMIT,
                 studentList.stream().filter(student -> student.getSectionName().equals(sectionInMaxCapacity)).count());
-        assertEquals(courseId, studentToJoinMaxSection.getCourse());
+        assertEquals(courseId, studentToJoinMaxSection.getCourse().getId());
 
         StudentUpdateRequest updateRequest =
                 new StudentUpdateRequest(studentToJoinMaxSection.getName(), studentToJoinMaxSection.getEmail(),

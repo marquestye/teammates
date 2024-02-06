@@ -227,7 +227,16 @@ public final class UsersLogic {
      *                                      database.
      */
     public Student createStudent(Student student) throws InvalidParametersException, EntityAlreadyExistsException {
+        if (student.getTeam() != null) {
+            Section section = student.getSection();
+            Team team = getTeamOrCreate(section, student.getTeamName());
+            student.setTeam(team);
+        }
         return usersDb.createStudent(student);
+    }
+
+    public Team getTeam(Section section, String teamName) {
+        return usersDb.getTeam(section, teamName);
     }
 
     /**
@@ -680,15 +689,21 @@ public final class UsersLogic {
         Team originalTeam = originalStudent.getTeam();
         Section originalSection = originalStudent.getSection();
 
-        boolean changedEmail = !originalEmail.equals(newEmail);
+        boolean changedEmail = !originalEmail.equals(newEmail) && newEmail != null;
         boolean changedTeam = isTeamChanged(originalTeam, student.getTeam());
         boolean changedSection = isSectionChanged(originalSection, student.getSection());
 
         originalStudent.setName(student.getName());
         originalStudent.setTeam(student.getTeam());
         originalStudent.setComments(student.getComments());
+
         if (changedEmail) {
-            originalStudent.setEmail(newEmail);
+            List<Student> students = getAllStudentsForEmail(newEmail);
+            if (students.size() == 0) {
+                originalStudent.setEmail(newEmail);
+            } else {
+                throw new EntityAlreadyExistsException("Duplicate email");
+            }
         }
 
         Student updatedStudent = usersDb.updateStudent(originalStudent);

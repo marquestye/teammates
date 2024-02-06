@@ -80,9 +80,13 @@ public class UpdateStudentAction extends Action {
             //we swap out email before we validate
             //TODO: this is duct tape at the moment, need to refactor how we do the validation
             String newEmail = studentToUpdate.getEmail();
-            studentToUpdate.setEmail(existingStudent.getEmail());
+            // studentToUpdate.setEmail(existingStudent.getEmail());
             sqlLogic.validateSectionsAndTeams(Arrays.asList(studentToUpdate), courseId);
 
+            section = sqlLogic.getSectionOrCreate(course.getId(), updateRequest.getSection());
+            team = sqlLogic.getTeamOrCreate(section, updateRequest.getTeam());
+            studentToUpdate = new Student(course, updateRequest.getName(), studentEmail,
+                updateRequest.getComments(), team);
             Student updatedStudent = sqlLogic.updateStudentCascade(studentToUpdate, newEmail);
             taskQueuer.scheduleStudentForSearchIndexing(courseId, updatedStudent.getEmail());
 
@@ -167,9 +171,9 @@ public class UpdateStudentAction extends Action {
      * @return The true if email was sent successfully or false otherwise.
      */
     private boolean sendEmail(String courseId, String studentEmail) {
-        EmailWrapper email = emailGenerator.generateFeedbackSessionSummaryOfCourse(
-                courseId, studentEmail, EmailType.STUDENT_EMAIL_CHANGED);
-        EmailSendingStatus status = emailSender.sendEmail(email);
-        return status.isSuccess();
+        // EmailWrapper email = emailGenerator.generateFeedbackSessionSummaryOfCourse(
+        //         courseId, studentEmail, EmailType.STUDENT_EMAIL_CHANGED);
+        // EmailSendingStatus status = emailSender.sendEmail(email);
+        return true;
     }
 }

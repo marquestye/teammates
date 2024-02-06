@@ -20,6 +20,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.transaction.Transactional;
 
 /**
  * Handles CRUD operations for courses.
@@ -94,6 +95,7 @@ public final class CoursesDb extends EntitiesDb {
     /**
      * Creates a section.
      */
+    @Transactional
     public Section createSection(Section section) throws InvalidParametersException, EntityAlreadyExistsException {
         assert section != null;
 
@@ -108,7 +110,6 @@ public final class CoursesDb extends EntitiesDb {
         persist(section);
         return section;
     }
-
     /**
      * Get section by name.
      */
@@ -234,6 +235,44 @@ public final class CoursesDb extends EntitiesDb {
                 cb.equal(teamRoot.get("name"), teamName)));
 
         return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+
+     /**
+     * Gets the section with the specified {@code sectionName} and {@code courseId}.
+     */
+    public Section getSection(String courseId, String sectionName) {
+        assert sectionName != null;
+
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaQuery<Section> cr = cb.createQuery(Section.class);
+        Root<Section> sectionRoot = cr.from(Section.class);
+        Join<Section, Course> courseJoin = sectionRoot.join("course");
+
+        cr.select(sectionRoot)
+                .where(cb.and(
+                    cb.equal(courseJoin.get("id"), courseId),
+                    cb.equal(sectionRoot.get("name"), sectionName)));
+
+        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a section by its {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(String courseId, String sectionName) {
+        assert courseId != null;
+        assert sectionName != null;
+
+        Section section = getSection(courseId, sectionName);
+
+        if (section == null) {
+            Course course = getCourse(courseId);
+            section = new Section(course, sectionName);
+            persist(section);
+        }
+
+        return section;
     }
 
 }

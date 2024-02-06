@@ -225,6 +225,10 @@ public final class CoursesLogic {
      * Creates a team.
      */
     public Team createTeam(Team team) throws InvalidParametersException, EntityAlreadyExistsException {
+        if (team.getSection() != null) {
+            Section section = coursesDb.getSectionOrCreate(team.getSection().getCourse().getId(), team.getSection().getName());
+            team.setSection(section);
+        }
         return coursesDb.createTeam(team);
     }
 

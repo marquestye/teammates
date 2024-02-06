@@ -81,7 +81,7 @@ public final class UsersDb extends EntitiesDb {
         }
 
         persist(student);
-        return student;
+            return student;
     }
 
     /**
@@ -570,6 +570,26 @@ public final class UsersDb extends EntitiesDb {
     }
 
     /**
+     * Gets a section by its {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(Section section) {
+        assert section != null;
+
+        String courseId = section.getCourse().getId();
+        String sectionName = section.getName();
+
+        section = getSection(courseId, sectionName);
+
+        if (section == null) {
+            Course course = CoursesDb.inst().getCourse(courseId);
+            section = new Section(course, sectionName);
+            persist(section);
+        }
+
+        return section;
+    }
+
+    /**
      * Gets a team by its {@code section} and {@code teamName}.
      */
     public Team getTeam(Section section, String teamName) {
@@ -583,7 +603,7 @@ public final class UsersDb extends EntitiesDb {
 
         cr.select(teamRoot)
                 .where(cb.and(
-                    cb.equal(sectionJoin.get("id"), section.getId()),
+                    cb.equal(sectionJoin.get("name"), section.getName()),
                     cb.equal(teamRoot.get("name"), teamName)));
 
         return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
@@ -595,7 +615,8 @@ public final class UsersDb extends EntitiesDb {
     public Team getTeamOrCreate(Section section, String teamName) {
         assert teamName != null;
         assert section != null;
-
+        
+        section = getSectionOrCreate(section);
         Team team = getTeam(section, teamName);
 
         if (team == null) {
