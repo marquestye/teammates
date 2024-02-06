@@ -195,6 +195,13 @@ public final class CoursesLogic {
     }
 
     /**
+     * Gets a team by associated {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException {
+        return coursesDb.getSectionOrCreate(section);
+    }
+
+    /**
      * Get section by {@code courseId} and {@code teamName}.
      */
     public Section getSectionByCourseIdAndTeam(String courseId, String teamName) {
@@ -221,10 +228,19 @@ public final class CoursesLogic {
                 .collect(Collectors.toList());
     }
 
+
+    public Team getTeam(Section section, String teamName) {
+        return coursesDb.getTeam(section, teamName);
+    }
+
     /**
      * Creates a team.
      */
     public Team createTeam(Team team) throws InvalidParametersException, EntityAlreadyExistsException {
+        if (team.getSection() != null) {
+            Section section = getSectionOrCreate(team.getSection());
+            team.setSection(section);
+        }
         return coursesDb.createTeam(team);
     }
 
@@ -233,6 +249,20 @@ public final class CoursesLogic {
      */
     public List<Team> getTeamsForSection(Section section) {
         return coursesDb.getTeamsForSection(section);
+    }
+
+     /**
+     * Gets the section with the name in a particular course, otherwise creates a new section.
+     */
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException {
+        return coursesDb.getSectionOrCreate(courseId, sectionName);
+    }
+
+    /**
+     * Gets the team with the name in a particular session, otherwise creates a new team.
+     */
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException {
+        return coursesDb.getTeamOrCreate(section, teamName);
     }
 
     /**

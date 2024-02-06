@@ -70,6 +70,8 @@ public final class UsersLogic {
 
     private DeadlineExtensionsLogic deadlineExtensionsLogic;
 
+    private CoursesLogic coursesLogic;
+
     private UsersLogic() {
         // prevent initialization
     }
@@ -80,12 +82,13 @@ public final class UsersLogic {
 
     void initLogicDependencies(UsersDb usersDb, AccountsLogic accountsLogic, FeedbackResponsesLogic feedbackResponsesLogic,
             FeedbackResponseCommentsLogic feedbackResponseCommentsLogic,
-            DeadlineExtensionsLogic deadlineExtensionsLogic) {
+            DeadlineExtensionsLogic deadlineExtensionsLogic, CoursesLogic coursesLogic) {
         this.usersDb = usersDb;
         this.accountsLogic = accountsLogic;
         this.feedbackResponsesLogic = feedbackResponsesLogic;
         this.feedbackResponseCommentsLogic = feedbackResponseCommentsLogic;
         this.deadlineExtensionsLogic = deadlineExtensionsLogic;
+        this.coursesLogic = coursesLogic;
     }
 
     private InstructorSearchManager getInstructorSearchManager() {
@@ -227,6 +230,11 @@ public final class UsersLogic {
      *                                      database.
      */
     public Student createStudent(Student student) throws InvalidParametersException, EntityAlreadyExistsException {
+        if (student.getTeam() != null) {
+            Section section = coursesLogic.getSectionOrCreate(student.getSection());
+            Team team = coursesLogic.getTeamOrCreate(section, student.getTeamName());
+            student.setTeam(team);
+        }
         return usersDb.createStudent(student);
     }
 
@@ -563,20 +571,6 @@ public final class UsersLogic {
     }
 
     /**
-     * Gets the section with the name in a particular course, otherwise creates a new section.
-     */
-    public Section getSectionOrCreate(String courseId, String sectionName) {
-        return usersDb.getSectionOrCreate(courseId, sectionName);
-    }
-
-    /**
-     * Gets the team with the name in a particular session, otherwise creates a new team.
-     */
-    public Team getTeamOrCreate(Section section, String teamName) {
-        return usersDb.getTeamOrCreate(section, teamName);
-    }
-
-    /**
      * Checks if there are any other registered instructors that can modify instructors.
      * If there are none, the instructor currently being edited will be granted the privilege
      * of modifying instructors automatically.
@@ -680,15 +674,21 @@ public final class UsersLogic {
         Team originalTeam = originalStudent.getTeam();
         Section originalSection = originalStudent.getSection();
 
-        boolean changedEmail = !originalEmail.equals(newEmail);
+        boolean changedEmail = !originalEmail.equals(newEmail) && newEmail != null;
         boolean changedTeam = isTeamChanged(originalTeam, student.getTeam());
         boolean changedSection = isSectionChanged(originalSection, student.getSection());
 
         originalStudent.setName(student.getName());
         originalStudent.setTeam(student.getTeam());
         originalStudent.setComments(student.getComments());
+
         if (changedEmail) {
-            originalStudent.setEmail(newEmail);
+            List<Student> students = getAllStudentsForEmail(newEmail);
+            if (students.size() == 0) {
+                originalStudent.setEmail(newEmail);
+            } else {
+                throw new EntityAlreadyExistsException("Duplicate email");
+            }
         }
 
         Student updatedStudent = usersDb.updateStudent(originalStudent);

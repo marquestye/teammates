@@ -81,7 +81,7 @@ public final class UsersDb extends EntitiesDb {
         }
 
         persist(student);
-        return student;
+            return student;
     }
 
     /**
@@ -549,61 +549,6 @@ public final class UsersDb extends EntitiesDb {
                     cb.equal(sectionRoot.get("name"), sectionName)));
 
         return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
-    }
-
-    /**
-     * Gets a section by its {@code courseId} and {@code sectionName}.
-     */
-    public Section getSectionOrCreate(String courseId, String sectionName) {
-        assert courseId != null;
-        assert sectionName != null;
-
-        Section section = getSection(courseId, sectionName);
-
-        if (section == null) {
-            Course course = CoursesDb.inst().getCourse(courseId);
-            section = new Section(course, sectionName);
-            persist(section);
-        }
-
-        return section;
-    }
-
-    /**
-     * Gets a team by its {@code section} and {@code teamName}.
-     */
-    public Team getTeam(Section section, String teamName) {
-        assert teamName != null;
-        assert section != null;
-
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Team> cr = cb.createQuery(Team.class);
-        Root<Team> teamRoot = cr.from(Team.class);
-        Join<Team, Section> sectionJoin = teamRoot.join("section");
-
-        cr.select(teamRoot)
-                .where(cb.and(
-                    cb.equal(sectionJoin.get("id"), section.getId()),
-                    cb.equal(teamRoot.get("name"), teamName)));
-
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
-    }
-
-    /**
-     * Gets a team by its {@code section} and {@code teamName}.
-     */
-    public Team getTeamOrCreate(Section section, String teamName) {
-        assert teamName != null;
-        assert section != null;
-
-        Team team = getTeam(section, teamName);
-
-        if (team == null) {
-            team = new Team(section, teamName);
-            persist(team);
-        }
-
-        return team;
     }
 
     /**

@@ -108,7 +108,6 @@ public final class CoursesDb extends EntitiesDb {
         persist(section);
         return section;
     }
-
     /**
      * Get section by name.
      */
@@ -217,6 +216,49 @@ public final class CoursesDb extends EntitiesDb {
         return team;
     }
 
+        /**
+     * Gets a team by its {@code section} and {@code teamName}.
+     */
+    public Team getTeam(Section section, String teamName) {
+        assert teamName != null;
+        assert section != null;
+
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaQuery<Team> cr = cb.createQuery(Team.class);
+        Root<Team> teamRoot = cr.from(Team.class);
+        Join<Team, Section> sectionJoin = teamRoot.join("section");
+
+        cr.select(teamRoot)
+                .where(cb.and(
+                    cb.equal(sectionJoin.get("name"), section.getName()),
+                    cb.equal(teamRoot.get("name"), teamName)));
+
+        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a team by its {@code section} and {@code teamName}.
+     */
+    public Team getTeamOrCreate(Section section, String teamName) throws InvalidParametersException {
+        assert teamName != null;
+        assert section != null;
+        
+        section = getSectionOrCreate(section);
+        Team team = getTeam(section, teamName);
+
+        if (team == null) {
+            team = new Team(section, teamName);
+
+            if (!team.isValid()) {
+                throw new InvalidParametersException(team.getInvalidityInfo());
+            }
+
+            persist(team);
+        }
+
+        return team;
+    }
+
     /**
      * Gets a team by name.
      */
@@ -234,6 +276,74 @@ public final class CoursesDb extends EntitiesDb {
                 cb.equal(teamRoot.get("name"), teamName)));
 
         return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+
+     /**
+     * Gets the section with the specified {@code sectionName} and {@code courseId}.
+     */
+    public Section getSection(String courseId, String sectionName) {
+        assert sectionName != null;
+
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaQuery<Section> cr = cb.createQuery(Section.class);
+        Root<Section> sectionRoot = cr.from(Section.class);
+        Join<Section, Course> courseJoin = sectionRoot.join("course");
+
+        cr.select(sectionRoot)
+                .where(cb.and(
+                    cb.equal(courseJoin.get("id"), courseId),
+                    cb.equal(sectionRoot.get("name"), sectionName)));
+
+        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a section by its {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(String courseId, String sectionName) throws InvalidParametersException {
+        assert courseId != null;
+        assert sectionName != null;
+
+        Section section = getSection(courseId, sectionName);
+
+        if (section == null) {
+            Course course = CoursesDb.inst().getCourse(courseId);
+            section = new Section(course, sectionName);
+            
+            if (!section.isValid()) {
+                throw new InvalidParametersException(section.getInvalidityInfo());
+            }
+
+            persist(section);
+        }
+
+        return section;
+    }
+
+    /**
+     * Gets a section by its {@code courseId} and {@code sectionName}.
+     */
+    public Section getSectionOrCreate(Section section) throws InvalidParametersException {
+        assert section != null;
+
+        String courseId = section.getCourse().getId();
+        String sectionName = section.getName();
+
+        section = getSection(courseId, sectionName);
+
+        if (section == null) {
+            Course course = CoursesDb.inst().getCourse(courseId);
+            section = new Section(course, sectionName);
+
+            if (!section.isValid()) {
+                throw new InvalidParametersException(section.getInvalidityInfo());
+            }
+
+            persist(section);
+        }
+
+        return section;
     }
 
 }
